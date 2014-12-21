@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <service id="tom_sawyer.bacon_finder.security.user_provider" class="TomSawyer\BaconFinder\AppBundle\Security\UserProvider">
+            <argument type="service" id="tom_sawyer.bacon_finder.user_manager"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.user_repository"></argument>
+            <argument type="service" id="security.token_storage"></argument>
+            <argument type="service" id="logger"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.facebook"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.twitter_importer"></argument>
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.user_manager" class="TomSawyer\BaconFinder\AppBundle\Manager\UserManager">
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.user_repository" class="TomSawyer\BaconFinder\AppBundle\Repository\UserRepository">
+            <argument type="service" id="ga.neo4j"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.user_manager"></argument>
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.facebook" class="TomSawyer\BaconFinder\AppBundle\Facebook\Facebook">
+            <argument>%fb_app_id%</argument>
+            <argument>%fb_app_secret%</argument>
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.twitter" class="TomSawyer\BaconFinder\AppBundle\Twitter\TwitterClient">
+            <argument>%twitter.app_id%</argument>
+            <argument>%twitter.app_secret%</argument>
+            <argument>%twitter.app_token%</argument>
+            <argument>%twitter.app_token_secret%</argument>
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.twitter_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\TwitterFriendsImporter">
+            <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
+            <argument type="service" id="ga.neo4j"></argument>
+        </service>
+    </services>
+</container>

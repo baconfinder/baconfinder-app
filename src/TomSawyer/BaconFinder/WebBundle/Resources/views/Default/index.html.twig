@@ -1,0 +1,11 @@
+{% extends "TomSawyerBaconFinderWebBundle:Default:layout.html.twig" %}
+
+{% block content %}
+    <div class="jumbotron">
+        <h1>Welcome</h1>
+        <p class="lead">Cras justo odio, dapibus ac facilisis in, egestas eget quam. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+        <p><a class="btn btn-lg btn-facebook" href="{{ hwi_oauth_login_url('facebook') }}" role="button">Login with Facebook</a></p>
+        <p><a class="btn btn-lg btn-twitter" href="{{ hwi_oauth_login_url('twitter') }}" role="button">Login with Twitter</a></p>
+    </div>
+
+{% endblock %}

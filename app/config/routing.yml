@@ -1,0 +1,29 @@
+# define first oauth routes to avoid conflicts
+hwi_oauth_redirect:
+    resource: "@HWIOAuthBundle/Resources/config/routing/redirect.xml"
+    prefix:   /connect
+
+hwi_oauth_login:
+    resource: "@HWIOAuthBundle/Resources/config/routing/login.xml"
+    prefix:   /login
+
+hwi_oauth_connect:
+    resource: "@HWIOAuthBundle/Resources/config/routing/connect.xml"
+    prefix:   /service-connect
+
+facebook_login:
+    pattern: /login/check-facebook
+
+twitter_login:
+    pattern: /login/check-twitter
+
+logout:
+    pattern: /logout
+
+
+
+# bundle routes
+tom_sawyer_bacon_finder_web:
+    resource: "@TomSawyerBaconFinderWebBundle/Controller/"
+    type:     annotation
+    prefix:   /
