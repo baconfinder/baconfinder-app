@@ -29,6 +29,10 @@
             <ul class="nav nav-pills pull-right">
                 <li role="presentation" class="active"><a href="{{ path('home') }}">Home</a></li>
                 <li role="presentation"><a href="#">About</a></li>
+                {% if is_granted('ROLE_USER') %}
+                <li role="presentation"><a href="#">My account ({{ app.user.username }})</a></li>
+                <li role="presentation"><a href="{{ path('logout') }}">Logout</a></li>
+                {% endif %}
                 <!--
                 <li role="presentation"><a href="#">Contact</a></li>
                 -->

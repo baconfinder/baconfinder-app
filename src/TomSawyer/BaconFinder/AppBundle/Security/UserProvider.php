@@ -26,16 +26,13 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
 
     protected $twitterClient;
 
-    protected $twitterImporter;
-
     public function __construct(
         UserManager $userManager,
         UserRepository $userRepository,
         TokenStorageInterface $context,
         $logger,
         $facebookClient,
-        $twitterClient,
-        $twitterImporter)
+        $twitterClient)
     {
         $this->userManager = $userManager;
         $this->userRepository = $userRepository;
@@ -43,13 +40,35 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
         $this->context = $context;
         $this->facebookClient = $facebookClient;
         $this->twitterClient = $twitterClient;
-        $this->twitterImporter = $twitterImporter;
     }
 
+    /**
+     * Authenticate a user by Oauth Service Owner
+     * If the User Token already exist, the other owner infos will be joined
+     *
+     * @param UserResponseInterface $response
+     * @return bool|mixed|null|User
+     */
     public function loadUserByOAuthUserResponse(UserResponseInterface $response)
     {
         $userContext = $this->context->getToken();
-        //print_r($response->getResponse());
+        if (null !== $userContext) {
+            if ($response->getResourceOwner()->getName() === $userContext->getUser()->getResourceOwner()) {
+                return $userContext->getUser();
+            }
+            switch ($userContext->getUser()->getResourceOwner()) {
+                case 'twitter':
+                    $join = $this->getFbUserFromResponse($response);
+                    $this->userRepository->joinAccount('twitter', $userContext->getUser()->getTwitterid(), $join);
+                    break;
+                case 'facebook':
+                    $join = $this->getTwitterUserFromResponse($response);
+                    $this->userRepository->joinAccount('facebook', $userContext->getUser()->getEmail(), $join);
+                    break;
+            }
+
+            return $userContext->getUser();
+        }
         $resourceOwner = strtolower($response->getResourceOwner()->getName());
 
         switch($resourceOwner) {
@@ -66,6 +85,12 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
         return $user;
     }
 
+    /**
+     * Loads or create a user logged in with Facebook Login
+     *
+     * @param UserResponseInterface $response
+     * @return null|User
+     */
     private function loadFacebookUser(UserResponseInterface $response)
     {
         $user = $this->userRepository->getFacebookUserByEmail($response->getEmail(), $response->getAccessToken());
@@ -75,46 +100,68 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
         }
 
         if (null === $user) {
-            $user = $this->userManager->createFacebookUser(
-                $response->getEmail(),
-                $response->getResponse()['id'],
-                $response->getResponse()['first_name'],
-                $response->getResponse()['last_name'],
-                $response->getAccessToken()
-            );
+            $user = $this->getFbUserFromResponse($response);
+            $user->setResourceOwner('facebook');
             $this->userRepository->createUser($user);
         }
-        $user->getFacebookProfile()->setToken($response->getAccessToken());
+        $user->setFacebookToken($response->getAccessToken());
 
         return $user;
     }
 
+    /**
+     * Loads or create a user logged in with Twitter login
+     *
+     * @param UserResponseInterface $response
+     * @return null|User
+     */
     private function loadTwitterUser(UserResponseInterface $response)
     {
-        //$user = $this->userRepository->getTwitterUser($response->getUsername(), $response->getAccessToken());
-        $this->twitterImporter->importFriendsForUser($response->getUsername());
-        exit();
+        $user = $this->userRepository->getTwitterUserById($response->getUsername(), $response->getAccessToken());
 
         if (null === $user) {
-            $user = $this->userManager->createFacebookUser(
-                $response->getEmail(),
-                $response->getResponse()['id'],
-                $response->getResponse()['first_name'],
-                $response->getResponse()['last_name'],
-                $response->getAccessToken()
-            );
+            $user = $this->getTwitterUserFromResponse($response);
+            $user->setResourceOwner('twitter');
             $this->userRepository->createUser($user);
         }
-        $user->getFacebookProfile()->setToken($response->getAccessToken());
+        $user->setTwitterToken($response->getAccessToken());
 
         return $user;
     }
 
+    /**
+     * @inherit
+     */
     public function loadUserByUsername($username)
     {
-        return $this->userRepository->getFacebookUserByEmail($username);
+        return null;
     }
 
+    /**
+     * Load user from twitterId
+     *
+     * @param $id
+     * @return null|User
+     */
+    private function loadTwitterUserById($id)
+    {
+        return $this->userRepository->getTwitterUserById($id);
+    }
+
+    /**
+     * Load user from Facebook email
+     *
+     * @param $email
+     * @return null|User
+     */
+    private function loadFacebookUserByEmail($email)
+    {
+        return $this->userRepository->getFacebookUserByEmail($email);
+    }
+
+    /**
+     * @inherit
+     */
     public function refreshUser(UserInterface $user)
     {
         if (!$user instanceof User) {
@@ -125,17 +172,62 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
 
         if ($user->shouldBeReloaded()) {
             $this->logger->debug('Reloading user from the database');
-            return $this->loadUserByUsername($user->getEmail());
+            switch($user->getResourceOwner()) {
+                case 'facebook':
+                    return $this->loadFacebookUserByEmail($user->getEmail());
+                case 'twitter':
+                    return $this->loadTwitterUserById($user->getTwitterId());
+            }
         } else {
             $this->logger->debug('User should not be reloaded from the database');
             $user->incReloaded();
+            return $user;
         }
-        return $user;
     }
 
+    /**
+     * @inherit
+     */
     public function supportsClass($class)
     {
         return $class === 'BaconFinder\AppBundle\Model\User';
+    }
+
+    /**
+     * Create a User instance from Facebook OAuth Response
+     *
+     * @param UserResponseInterface $response
+     * @return User
+     */
+    private function getFbUserFromResponse(UserResponseInterface $response)
+    {
+        $user = $this->userManager->createFacebookUser(
+            $response->getEmail(),
+            $response->getResponse()['id'],
+            $response->getResponse()['first_name'],
+            $response->getResponse()['last_name'],
+            $response->getAccessToken()
+        );
+
+        return $user;
+    }
+
+    /**
+     * Create a User instance from Twitter OAuth Response
+     *
+     * @param UserResponseInterface $response
+     * @return User
+     */
+    private function getTwitterUserFromResponse(UserResponseInterface $response)
+    {
+        $user = $this->userManager->createTwitterUser(
+            $response->getResponse()['id'],
+            $response->getResponse()['screen_name'],
+            $response->getResponse()['name'],
+            $response->getAccessToken()
+        );
+
+        return $user;
     }
 
 }

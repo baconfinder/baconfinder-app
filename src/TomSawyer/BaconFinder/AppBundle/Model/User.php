@@ -12,9 +12,21 @@ class User implements UserInterface, EquatableInterface
 
     protected $email;
 
-    protected $facebookProfile;
+    protected $firstname;
 
-    protected $twitterProfile;
+    protected $lastname;
+
+    protected $facebookId;
+
+    protected $twitterId;
+
+    protected $twitterScreenName;
+
+    protected $twitterName;
+
+    protected $facebookToken;
+
+    protected $twitterToken;
 
     protected $roles;
 
@@ -26,15 +38,202 @@ class User implements UserInterface, EquatableInterface
 
     protected $reloaded;
 
+
     /**
-     * @return mixed
+     * Returns the username depending on the service owner
+     *
+     * @return mixed|null|string username
      */
     public function getUsername()
     {
-        $profileM = 'get' . ucfirst($this->resourceOwner) . 'Profile';
-        $profile = $this->$profileM();
+        switch ($this->resourceOwner) {
+            case 'facebook':
+                return $this->getFirstname() . ' ' . $this->getLastname();
+                break;
+            case 'twitter':
+                return $this->getTwitterScreenName();
+                break;
+            default:
+                return null;
+        }
+    }
 
-        return $profile->getUsername();
+    /**
+     * @return mixed
+     */
+    public function getUuid()
+    {
+        return $this->uuid;
+    }
+
+    /**
+     * @param mixed $uuid
+     */
+    public function setUuid($uuid)
+    {
+        $this->uuid = $uuid;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param mixed $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFirstname()
+    {
+        return $this->firstname;
+    }
+
+    /**
+     * @param mixed $firstname
+     */
+    public function setFirstname($firstname)
+    {
+        $this->firstname = $firstname;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLastname()
+    {
+        return $this->lastname;
+    }
+
+    /**
+     * @param mixed $lastname
+     */
+    public function setLastname($lastname)
+    {
+        $this->lastname = $lastname;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFacebookId()
+    {
+        return $this->facebookId;
+    }
+
+    /**
+     * @param mixed $facebookId
+     */
+    public function setFacebookId($facebookId)
+    {
+        $this->facebookId = $facebookId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTwitterId()
+    {
+        return $this->twitterId;
+    }
+
+    /**
+     * @param mixed $twitterId
+     */
+    public function setTwitterId($twitterId)
+    {
+        $this->twitterId = $twitterId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTwitterScreenName()
+    {
+        return $this->twitterScreenName;
+    }
+
+    /**
+     * @param mixed $twitterScreenName
+     */
+    public function setTwitterScreenName($twitterScreenName)
+    {
+        $this->twitterScreenName = $twitterScreenName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTwitterName()
+    {
+        return $this->twitterName;
+    }
+
+    /**
+     * @param mixed $twitterName
+     */
+    public function setTwitterName($twitterName)
+    {
+        $this->twitterName = $twitterName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFacebookToken()
+    {
+        return $this->facebookToken;
+    }
+
+    /**
+     * @param mixed $facebookToken
+     */
+    public function setFacebookToken($facebookToken)
+    {
+        $this->facebookToken = $facebookToken;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTwitterToken()
+    {
+        return $this->twitterToken;
+    }
+
+    /**
+     * @param mixed $twitterToken
+     */
+    public function setTwitterToken($twitterToken)
+    {
+        $this->twitterToken = $twitterToken;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRoles()
+    {
+        return array(
+            'ROLE_USER'
+        );
+    }
+
+    /**
+     * @param mixed $roles
+     */
+    public function setRoles($roles)
+    {
+        $this->roles = $roles;
     }
 
     /**
@@ -72,65 +271,17 @@ class User implements UserInterface, EquatableInterface
     /**
      * @return mixed
      */
-    public function getUuid()
+    public function getResourceOwner()
     {
-        return $this->uuid;
+        return $this->resourceOwner;
     }
 
     /**
-     * @param mixed $uuid
+     * @param mixed $resourceOwner
      */
-    public function setUuid($uuid)
+    public function setResourceOwner($resourceOwner)
     {
-        $this->uuid = $uuid;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    /**
-     * @param mixed $email
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-    }
-
-    /**
-     * @return \BaconFinder\AppBundle\Model\FacebookProfile
-     */
-    public function getFacebookProfile()
-    {
-        return $this->facebookProfile;
-    }
-
-    /**
-     * @param mixed $facebookProfile
-     */
-    public function setFacebookProfile(FacebookProfile $facebookProfile)
-    {
-        $this->facebookProfile = $facebookProfile;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getTwitterProfile()
-    {
-        return $this->twitterProfile;
-    }
-
-    /**
-     * @param mixed $twitterProfile
-     */
-    public function setTwitterProfile($twitterProfile)
-    {
-        $this->twitterProfile = $twitterProfile;
+        $this->resourceOwner = $resourceOwner;
     }
 
     public function isEqualTo(UserInterface $user)
@@ -157,32 +308,6 @@ class User implements UserInterface, EquatableInterface
     public function eraseCredentials()
     {
 
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRoles()
-    {
-        return array(
-            'ROLE_USER'
-        );
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getResourceOwner()
-    {
-        return $this->resourceOwner;
-    }
-
-    /**
-     * @param mixed $resourceOwner
-     */
-    public function setResourceOwner($resourceOwner)
-    {
-        $this->resourceOwner = $resourceOwner;
     }
 
     public function shouldBeReloaded()

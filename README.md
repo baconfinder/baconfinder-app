@@ -3,6 +3,8 @@ Tom Sawyer's Bacon Finder
 
 Application developed for Sai (USA).
 
+![Imgur](http://i.imgur.com/zlr9f8X.png)
+
 ## Specs
 
 * Twitter & Facebook Login
@@ -30,6 +32,8 @@ composer install --no-dev --optimize-autoloader
 ```bash
 bower install
 ```
+
+* Copy `app/config/parameters.yml.dist` to `app/config/parameters.yml` and provide the facebook and twitter app tokens
 
 ## Technical documentation
 

@@ -103,6 +103,6 @@ class TwitterClient
         $query->set('skip_status', 'true');
         $query->set('include_user_entities', 'false');
 
-        return $this->client->send($request)->json();
+        return $this->client->send($request);
     }
 }

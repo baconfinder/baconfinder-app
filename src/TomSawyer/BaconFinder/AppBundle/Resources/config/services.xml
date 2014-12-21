@@ -12,7 +12,7 @@
             <argument type="service" id="logger"></argument>
             <argument type="service" id="tom_sawyer.bacon_finder.facebook"></argument>
             <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
-            <argument type="service" id="tom_sawyer.bacon_finder.twitter_importer"></argument>
+            <argument type="service" id="event_dispatcher"></argument>
         </service>
 
         <service id="tom_sawyer.bacon_finder.user_manager" class="TomSawyer\BaconFinder\AppBundle\Manager\UserManager">

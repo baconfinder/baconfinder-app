@@ -20,18 +20,18 @@ class TwitterFriendsImporter
     public function importFriendsForUser($userId)
     {
         $friends = $this->twitterClient->getFriends($userId);
-        print_r($userId);
-        print_r($friends);
-        $q = 'MATCH (twitter:TwitterProfile {id: {id}})
+        $q = 'MATCH (twitter:TwitterProfile {id: {user_id} })
+        WITH twitter
+        UNWIND {friends} as friend
+        MERGE (followed:TwitterProfile {id: friend.id} )
+        MERGE (twitter)-[:FOLLOWS]->(followed)
         RETURN twitter';
 
         $p = [
-            'id' => (int) $userId,
+            'user_id' => (int) $userId,
             'friends' => $friends
         ];
 
         $result = $this->neo4jClient->sendCypherQuery($q, $p)->getResult();
-        print_r($result->get('user'));
-        exit();
     }
 }
