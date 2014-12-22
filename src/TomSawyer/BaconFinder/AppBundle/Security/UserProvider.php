@@ -6,6 +6,7 @@ use TomSawyer\BaconFinder\AppBundle\Model\User;
 use TomSawyer\BaconFinder\AppBundle\Repository\UserRepository;
 use TomSawyer\BaconFinder\AppBundle\TomSawyerBaconFinderEvents;
 use TomSawyer\BaconFinder\AppBundle\Event\TwitterImportEvent;
+use TomSawyer\BaconFinder\AppBundle\Event\FacebookImportEvent;
 use HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface;
 use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use TomSawyer\BaconFinder\AppBundle\Manager\UserManager;
@@ -67,6 +68,8 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
                     $join = $this->getFbUserFromResponse($response);
                     $this->userRepository->joinAccount('twitter', $userContext->getUser()->getTwitterid(), $join);
                     $userContext->getUser()->setFacebookId($response->getResponse()['id']);
+                    $event = new FacebookImportEvent($userContext->getUser(), $response->getAccessToken());
+                    $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::FACEBOOK_IMPORT, $event);
                     break;
                 case 'facebook':
                     $join = $this->getTwitterUserFromResponse($response);
@@ -84,6 +87,7 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
         switch($resourceOwner) {
             case 'facebook':
                 $user = $this->loadFacebookUser($response);
+                $this->facebookClient->getUserFriends($response->getAccessToken());
                 break;
             case 'twitter':
                 $user = $this->loadTwitterUser($response);
@@ -113,6 +117,8 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
             $user = $this->getFbUserFromResponse($response);
             $user->setResourceOwner('facebook');
             $this->userRepository->createUser($user);
+            $event = new FacebookImportEvent($user, $response->getAccessToken());
+            $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::FACEBOOK_IMPORT, $event);
         }
         $user->setFacebookToken($response->getAccessToken());
 

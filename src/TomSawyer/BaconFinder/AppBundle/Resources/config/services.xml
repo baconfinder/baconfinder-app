@@ -40,5 +40,11 @@
             <argument type="service" id="ga.neo4j"></argument>
             <tag name="kernel.event_listener" event="bacon_finder.twitter_import" method="onTwitterImport" />
         </service>
+
+        <service id="tom_sawyer.bacon_finder.facebook_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\FacebookImporter">
+            <argument type="service" id="tom_sawyer.bacon_finder.facebook"></argument>
+            <argument type="service" id="ga.neo4j"></argument>
+            <tag name="kernel.event_listener" event="bacon_finder.facebook_import" method="onFacebookImport" />
+        </service>
     </services>
 </container>

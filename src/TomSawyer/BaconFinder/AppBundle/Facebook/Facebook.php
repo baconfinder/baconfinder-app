@@ -24,7 +24,8 @@ class Facebook
             '/me'
         );
         $user = $request->execute()->getGraphObject(GraphUser::className());
-        print_r($user);
+
+        return $user;
     }
 
     public function getUserFriends($token)
@@ -36,8 +37,15 @@ class Facebook
             '/me/friends'
         );
         $response = $request->execute();
+        $friends = [];
+        $res = $response->getGraphObject();
+        foreach ($res->getPropertyAsArray('data') as $friend) {
+            $friends[] = [
+                'name' => $friend->getProperty('name'),
+                'facebookId' => $friend->getProperty('id')
+            ];
+        }
 
-        $friends = $response->getGraphObject();
-        print_r($friends);
+        return $friends;
     }
 }
