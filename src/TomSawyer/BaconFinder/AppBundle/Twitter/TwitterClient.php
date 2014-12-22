@@ -63,7 +63,6 @@ class TwitterClient
         while ($cursor != null) {
             $response = $this->processRequest($userId, $cursor);
             foreach ($response['users'] as $friend) {
-                //print_r($friend);
                 $friendsList[] = [
                     'id' => $friend['id'],
                     'screenName' => $friend['screen_name'],
@@ -103,6 +102,6 @@ class TwitterClient
         $query->set('skip_status', 'true');
         $query->set('include_user_entities', 'false');
 
-        return $this->client->send($request);
+        return $this->client->send($request)->json();
     }
 }
