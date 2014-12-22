@@ -106,9 +106,7 @@ class TwitterClient
         try {
             return $this->client->send($request)->json();
         } catch (ClientException $e) {
-            print_r((string) $e->getResponse());
-            exit();
-            //throw new \RuntimeException($e->getMessage());
+            
         }
 
     }
