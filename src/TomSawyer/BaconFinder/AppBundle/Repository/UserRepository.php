@@ -155,8 +155,8 @@ class UserRepository
     {
         $q = 'MERGE (user:User {twitterId: {id}})
         SET user :ActiveUser
-        SET user.name = {name}
-        SET user.screenName = {screenName}
+        SET user.twitterName = {name}
+        SET user.twitterScreenName = {screenName}
         SET user.twitterToken = {token}
         RETURN user';
         $p = [
