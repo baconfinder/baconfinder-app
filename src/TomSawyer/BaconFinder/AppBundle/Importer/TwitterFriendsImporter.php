@@ -3,6 +3,7 @@
 namespace TomSawyer\BaconFinder\AppBundle\Importer;
 
 use TomSawyer\BaconFinder\AppBundle\Twitter\TwitterClient;
+use TomSawyer\BaconFinder\AppBundle\Event\TwitterImportEvent;
 use Neoxygen\NeoClient\Client;
 
 class TwitterFriendsImporter
@@ -17,21 +18,26 @@ class TwitterFriendsImporter
         $this->neo4jClient = $neo4jClient;
     }
 
+    public function onTwitterImport(TwitterImportEvent $event)
+    {
+        $user = $event->getUser();
+        $this->importFriendsForUser($user->getTwitterId());
+    }
+
     public function importFriendsForUser($userId)
     {
         $friends = $this->twitterClient->getFriends($userId);
-        $q = 'MATCH (twitter:TwitterProfile {id: {user_id} })
-        WITH twitter
+        $q = 'MATCH (user:ActiveUser {twitterId: {user_id} })
+        WITH user
         UNWIND {friends} as friend
-        MERGE (followed:TwitterProfile {id: friend.id} )
-        MERGE (twitter)-[:FOLLOWS]->(followed)
-        RETURN twitter';
+        MERGE (followed:User {twitterId: friend.id} )
+        MERGE (user)-[:CONNECT]->(followed)';
 
         $p = [
             'user_id' => (int) $userId,
             'friends' => $friends
         ];
 
-        $result = $this->neo4jClient->sendCypherQuery($q, $p)->getResult();
+        $this->neo4jClient->sendCypherQuery($q, $p)->getResult();
     }
 }

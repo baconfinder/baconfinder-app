@@ -38,6 +38,7 @@
         <service id="tom_sawyer.bacon_finder.twitter_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\TwitterFriendsImporter">
             <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
             <argument type="service" id="ga.neo4j"></argument>
+            <tag name="kernel.event_listener" event="bacon_finder.twitter_import" method="onTwitterImport" />
         </service>
     </services>
 </container>

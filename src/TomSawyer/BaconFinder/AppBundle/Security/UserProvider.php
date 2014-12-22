@@ -4,6 +4,8 @@ namespace TomSawyer\BaconFinder\AppBundle\Security;
 
 use TomSawyer\BaconFinder\AppBundle\Model\User;
 use TomSawyer\BaconFinder\AppBundle\Repository\UserRepository;
+use TomSawyer\BaconFinder\AppBundle\TomSawyerBaconFinderEvents;
+use TomSawyer\BaconFinder\AppBundle\Event\TwitterImportEvent;
 use HWI\Bundle\OAuthBundle\Security\Core\User\OAuthAwareUserProviderInterface;
 use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use TomSawyer\BaconFinder\AppBundle\Manager\UserManager;
@@ -26,13 +28,16 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
 
     protected $twitterClient;
 
+    protected $eventDispatcher;
+
     public function __construct(
         UserManager $userManager,
         UserRepository $userRepository,
         TokenStorageInterface $context,
         $logger,
         $facebookClient,
-        $twitterClient)
+        $twitterClient,
+        $eventDispatcher)
     {
         $this->userManager = $userManager;
         $this->userRepository = $userRepository;
@@ -40,6 +45,7 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
         $this->context = $context;
         $this->facebookClient = $facebookClient;
         $this->twitterClient = $twitterClient;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -125,6 +131,8 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
             $user = $this->getTwitterUserFromResponse($response);
             $user->setResourceOwner('twitter');
             $this->userRepository->createUser($user);
+            $event = new TwitterImportEvent($user);
+            $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::TWITTER_IMPORT, $event);
         }
         $user->setTwitterToken($response->getAccessToken());
 
