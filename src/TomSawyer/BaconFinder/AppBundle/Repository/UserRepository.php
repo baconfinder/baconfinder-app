@@ -64,8 +64,8 @@ class UserRepository
         $user->setResourceOwner('twitter');
         $user->setTwitterToken($token);
         $user->setTwitterId($tUser->getProperty('twitterId'));
-        $user->setTwitterScreenName($tUser->getProperty('screenName'));
-        $user->setTwitterName($tUser->getProperty('name'));
+        $user->setTwitterScreenName($tUser->getProperty('twitterScreenName'));
+        $user->setTwitterName($tUser->getProperty('twitterName'));
         $user->setFacebookId($tUser->hasProperty('facebookId'));
 
         return $user;
