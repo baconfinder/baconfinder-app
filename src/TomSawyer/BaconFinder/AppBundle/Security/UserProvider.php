@@ -72,6 +72,8 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
                     $join = $this->getTwitterUserFromResponse($response);
                     $this->userRepository->joinAccount('facebook', $userContext->getUser()->getEmail(), $join);
                     $userContext->getUser()->setTwitterId($response->getResponse()['id']);
+                    $event = new TwitterImportEvent($userContext->getUser());
+                    $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::TWITTER_IMPORT, $event);
                     break;
             }
 
