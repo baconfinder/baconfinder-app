@@ -81,8 +81,11 @@ graph_aware_neo4j:
     connections:
         baconfinder:
             scheme: http
-            host: localhost
-            port: 7474
+            host: sai.sb02.stations.graphenedb.com
+            port: 24789
+            auth: true
+            user: sai
+            password: n7LVmebeZdrTmMLwLrxp
     loggers:
         main:
             channel: neo4j

@@ -25,4 +25,18 @@ class DefaultController extends Controller
     {
         return array();
     }
+
+    /**
+     * @Route("/account/connections-count", name="user_connection_count")
+     * @Template()
+     */
+    public function connectionsCountAction()
+    {
+        $user = $this->getUser();
+        $count = $this->container->get('tom_sawyer.bacon_finder.user_repository')->getUserConnectionsCount($user);
+
+        return array(
+            'count' => $count
+        );
+    }
 }

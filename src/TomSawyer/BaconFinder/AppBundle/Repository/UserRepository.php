@@ -123,6 +123,34 @@ class UserRepository
         }
     }
 
+    public function getUserConnectionsCount(User $user)
+    {
+        switch ($user->getResourceOwner()) {
+            case 'facebook':
+                $q = 'MATCH (n:User {email: {email}})
+                OPTIONAL MATCH (n)-[:CONNECT]->(f:User)
+                RETURN count(f) as connections';
+                $p = [
+                    'email' => $user->getEmail()
+                ];
+                $result = $this->client->sendCypherQuery($q, $p)->getResult();
+
+                return $result->get('connections');
+            case 'twitter':
+                $q = 'MATCH (n:User {twitterId:{id}})
+                OPTIONAL MATCH (n)-[:CONNECT]->(f:User)
+                RETURN count(f) as connections';
+                $p = [
+                    'id' => $user->getTwitterId()
+                ];
+                $result = $this->client->sendCypherQuery($q, $p)->getResult();
+
+                return $result->get('connections');
+        }
+
+        return null;
+    }
+
     private function createTwitterUser(User $user)
     {
         $q = 'MERGE (user:User {twitterId: {id}})
