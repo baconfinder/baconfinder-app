@@ -84,8 +84,6 @@ class TwitterClient
      */
     private function processRequest($userId, $cursor = null)
     {
-        print_r($this->appToken);
-        print_r($this->appTokenSecret);
         $oauth = new Oauth1(
             [
                 'consumer_key' => $this->apiKey,
@@ -105,15 +103,10 @@ class TwitterClient
         $query->set('skip_status', 'true');
         $query->set('include_user_entities', 'false');
 
-        print_r((string) $request);
-        print_r($request->getHeaders());
-
-        exit();
-
         try {
             return $this->client->send($request)->json();
         } catch (ClientException $e) {
-            throw new \RuntimeException($e->getMessage());
+            //throw new \RuntimeException($e->getMessage());
         }
 
     }
