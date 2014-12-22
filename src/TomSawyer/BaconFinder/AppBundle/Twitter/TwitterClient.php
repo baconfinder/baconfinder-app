@@ -4,6 +4,7 @@ namespace TomSawyer\BaconFinder\AppBundle\Twitter;
 
 use GuzzleHttp\Client,
     GuzzleHttp\Subscriber\Oauth\Oauth1;
+use GuzzleHttp\Exception\ClientException;
 
 class TwitterClient
 {
@@ -102,6 +103,11 @@ class TwitterClient
         $query->set('skip_status', 'true');
         $query->set('include_user_entities', 'false');
 
-        return $this->client->send($request)->json();
+        try {
+            return $this->client->send($request)->json();
+        } catch (ClientException $e) {
+            throw new \RuntimeException($e->getMessage());
+        }
+
     }
 }
