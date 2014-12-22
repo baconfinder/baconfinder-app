@@ -10,7 +10,7 @@
     <title>Tom Sawyer's Bacon Finder | {% block title %} Welcome {% endblock %}</title>
 
     {% stylesheets
-        '@bootstrap_css' output="assets/styles.css" %}
+        '@bootstrap_css' output="assets/styles.css" filter='cssrewrite'%}
     <link href="{{ asset_url }}" rel="stylesheet">
     {% endstylesheets %}
 

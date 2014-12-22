@@ -34,14 +34,15 @@ security:
                     twitter: "/login/check-twitter"
                 login_path: /login
                 use_forward: false
-                failure_path: /login
+                failure_path: /
+                default_target_path: /account
                 oauth_user_provider:
                     service: tom_sawyer.bacon_finder.security.user_provider
             logout:
                 path: /logout
                 target: /
         login:
-            pattern: ^/login/$
+            pattern: ^/login/
             security: false
             remember_me:
                 key: "%secret%"

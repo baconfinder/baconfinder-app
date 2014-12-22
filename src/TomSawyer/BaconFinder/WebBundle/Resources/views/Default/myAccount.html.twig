@@ -1,0 +1,32 @@
+{% extends "TomSawyerBaconFinderWebBundle:Default:layout.html.twig" %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-sm-6">
+            <h1>{{ app.user.username }}</h1>
+            <p>
+                {% if app.user.facebookId %}
+                <button class="btn btn-facebook disabled">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Facebook account joined
+                </button>
+                {% else %}
+                    <button class="btn btn-facebook">
+                        <a href="{{ hwi_oauth_login_url('facebook') }}">Join your Facebook account</a>
+                    </button>
+                {% endif %}
+
+                {% if app.user.twitterId %}
+                    <button class="btn btn-twitter disabled">
+                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Twitter account joined
+                    </button>
+                {% else %}
+                    <button class="btn btn-twitter">
+                        <a href="{{ hwi_oauth_login_url('twitter') }}">Join your Twitter account</a>
+                    </button>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+{% endblock %}

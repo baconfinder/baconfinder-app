@@ -88,3 +88,7 @@ body {
     background-color: #55acee;
     color: white;
 }
+
+.btn.btn-twitter a, .btn.btn-facebook a {
+    color: white;
+}

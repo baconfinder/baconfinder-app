@@ -46,6 +46,7 @@ class UserRepository
             $user->getProperty('lastname'),
             $token
         );
+        $fbUser->setTwitterId($user->hasProperty('twitterId'));
 
         return $fbUser;
     }
@@ -53,7 +54,7 @@ class UserRepository
     public function getTwitterUserById($id, $token = null)
     {
         $q = 'MATCH (user:User {twitterId: {id}}) RETURN user';
-        $p = ['id' => $id];
+        $p = ['id' => (int) $id];
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
         if (null === $result->get('user')) {
             return null;
@@ -65,6 +66,7 @@ class UserRepository
         $user->setTwitterId($tUser->getProperty('twitterId'));
         $user->setTwitterScreenName($tUser->getProperty('screenName'));
         $user->setTwitterName($tUser->getProperty('name'));
+        $user->setFacebookId($tUser->hasProperty('facebookId'));
 
         return $user;
     }
@@ -94,7 +96,7 @@ class UserRepository
                 SET user.twitterToken = {token}';
                 $p = [
                     'username' => $username,
-                    'twitterId' => $user->getTwitterId(),
+                    'twitterId' => (int) $user->getTwitterId(),
                     'twitterName' => $user->getTwitterName(),
                     'screenName' => $user->getTwitterScreenName(),
                     'token' => $user->getTwitterToken()
@@ -110,8 +112,8 @@ class UserRepository
                 SET user.facebookToken = {token}
                 RETURN user';
                 $p = [
-                    'id' => $username,
-                    'fbId' => $user->getFacebookId(),
+                    'id' => (int) $username,
+                    'fbId' => (int) $user->getFacebookId(),
                     'firstname' => $user->getFirstname(),
                     'lastname' => $user->getLastname(),
                     'token' => $user->getFacebookToken()
@@ -130,7 +132,7 @@ class UserRepository
         SET user.twitterToken = {token}
         RETURN user';
         $p = [
-            'id' => $user->getTwitterId(),
+            'id' => (int) $user->getTwitterId(),
             'screenName' => $user->getTwitterScreenName(),
             'token' => $user->getTwitterToken(),
             'name'=> $user->getTwitterName()
@@ -152,7 +154,7 @@ class UserRepository
 
         $p = [
             'email' => $user->getEmail(),
-            'fbId' => $user->getFacebookId(),
+            'fbId' => (int) $user->getFacebookId(),
             'firstname' => $user->getFirstName(),
             'lastname' => $user->getLastName(),
             'token' => $user->getFacebookToken()

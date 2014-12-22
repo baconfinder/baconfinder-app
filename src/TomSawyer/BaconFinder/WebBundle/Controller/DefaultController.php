@@ -16,4 +16,13 @@ class DefaultController extends Controller
     {
         return array();
     }
+
+    /**
+     * @Route("/account", name="my_account")
+     * @Template()
+     */
+    public function myAccountAction()
+    {
+        return array();
+    }
 }

@@ -60,10 +60,12 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
                 case 'twitter':
                     $join = $this->getFbUserFromResponse($response);
                     $this->userRepository->joinAccount('twitter', $userContext->getUser()->getTwitterid(), $join);
+                    $userContext->getUser()->setFacebookId($response->getResponse()['id']);
                     break;
                 case 'facebook':
                     $join = $this->getTwitterUserFromResponse($response);
                     $this->userRepository->joinAccount('facebook', $userContext->getUser()->getEmail(), $join);
+                    $userContext->getUser()->setTwitterId($response->getResponse()['id']);
                     break;
             }
 
@@ -170,18 +172,11 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
             );
         }
 
-        if ($user->shouldBeReloaded()) {
-            $this->logger->debug('Reloading user from the database');
-            switch($user->getResourceOwner()) {
-                case 'facebook':
-                    return $this->loadFacebookUserByEmail($user->getEmail());
-                case 'twitter':
-                    return $this->loadTwitterUserById($user->getTwitterId());
-            }
-        } else {
-            $this->logger->debug('User should not be reloaded from the database');
-            $user->incReloaded();
-            return $user;
+        switch($user->getResourceOwner()) {
+            case 'facebook':
+                return $this->loadFacebookUserByEmail($user->getEmail());
+            case 'twitter':
+                return $this->loadTwitterUserById($user->getTwitterId());
         }
     }
 
