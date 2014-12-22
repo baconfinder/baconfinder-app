@@ -110,13 +110,15 @@ class UserRepository
                 SET user.firstname = {firstname}
                 SET user.lastname = {lastname}
                 SET user.facebookToken = {token}
+                SET user.email = {email}
                 RETURN user';
                 $p = [
                     'id' => (int) $username,
                     'fbId' => (int) $user->getFacebookId(),
                     'firstname' => $user->getFirstname(),
                     'lastname' => $user->getLastname(),
-                    'token' => $user->getFacebookToken()
+                    'token' => $user->getFacebookToken(),
+                    'email' => $user->getEmail()
                 ];
                 $this->client->sendCypherQuery($q, $p);
                 break;

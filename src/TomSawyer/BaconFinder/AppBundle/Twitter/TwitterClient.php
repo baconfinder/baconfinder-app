@@ -106,7 +106,7 @@ class TwitterClient
         try {
             return $this->client->send($request)->json();
         } catch (ClientException $e) {
-            
+
         }
 
     }
