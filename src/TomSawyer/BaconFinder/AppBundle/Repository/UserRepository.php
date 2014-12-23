@@ -47,6 +47,7 @@ class UserRepository
             $token
         );
         $fbUser->setTwitterId($user->hasProperty('twitterId'));
+        $fbUser->setUuid($user->getProperty('uuid'));
 
         return $fbUser;
     }
@@ -67,6 +68,7 @@ class UserRepository
         $user->setTwitterScreenName($tUser->getProperty('twitterScreenName'));
         $user->setTwitterName($tUser->getProperty('twitterName'));
         $user->setFacebookId($tUser->hasProperty('facebookId'));
+        $user->setUuid($tUser->getProperty('uuid'));
 
         return $user;
     }
@@ -85,27 +87,27 @@ class UserRepository
         }
     }
 
-    public function joinAccount($owner, $username, User $user)
+    public function joinAccount($owner, $uuid, User $user)
     {
         switch ($owner) {
             case 'facebook':
-                $q = 'MATCH (user:User {email:{username}})
+                $q = 'MATCH (user:ActiveUser {uuid: {uuid}})
                 SET user.twitterId = {twitterId}
                 SET user.twitterName = {twitterName}
                 SET user.twitterScreenName = {screenName}
                 SET user.twitterToken = {token}';
                 $p = [
-                    'username' => $username,
                     'twitterId' => (int) $user->getTwitterId(),
                     'twitterName' => $user->getTwitterName(),
                     'screenName' => $user->getTwitterScreenName(),
-                    'token' => $user->getTwitterToken()
+                    'token' => $user->getTwitterToken(),
+                    'uuid' => $uuid
                 ];
                 $this->client->sendCypherQuery($q, $p);
                 break;
 
             case 'twitter':
-                $q = 'MATCH (user:User {twitterId: {id}})
+                $q = 'MATCH (user:ActiveUser {uuid: {uuid}})
                 SET user.facebookId = {fbId}
                 SET user.firstname = {firstname}
                 SET user.lastname = {lastname}
@@ -113,12 +115,12 @@ class UserRepository
                 SET user.email = {email}
                 RETURN user';
                 $p = [
-                    'id' => (int) $username,
                     'fbId' => (int) $user->getFacebookId(),
                     'firstname' => $user->getFirstname(),
                     'lastname' => $user->getLastname(),
                     'token' => $user->getFacebookToken(),
-                    'email' => $user->getEmail()
+                    'email' => $user->getEmail(),
+                    'uuid' => $uuid
                 ];
                 $this->client->sendCypherQuery($q, $p);
                 break;
@@ -127,57 +129,58 @@ class UserRepository
 
     public function getUserConnectionsCount(User $user)
     {
-        switch ($user->getResourceOwner()) {
-            case 'facebook':
-                $q = 'MATCH (n:User {email: {email}})
-                OPTIONAL MATCH (n)-[:CONNECT]->(f:User)
-                RETURN count(f) as connections';
-                $p = [
-                    'email' => $user->getEmail()
-                ];
-                $result = $this->client->sendCypherQuery($q, $p)->getResult();
+        $q = 'MATCH (n:ActiveUser {uuid: {uuid}})
+        OPTIONAL MATCH (n)-[:CONNECT]->(o)
+        RETURN count(o) as connections';
+        $p = [
+            'uuid' => $user->getUuid()
+        ];
 
-                return $result->get('connections');
-            case 'twitter':
-                $q = 'MATCH (n:User {twitterId:{id}})
-                OPTIONAL MATCH (n)-[:CONNECT]->(f:User)
-                RETURN count(f) as connections';
-                $p = [
-                    'id' => $user->getTwitterId()
-                ];
-                $result = $this->client->sendCypherQuery($q, $p)->getResult();
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
 
-                return $result->get('connections');
-        }
-
-        return null;
+        return $result->get('connections');
     }
 
     public function searchActiveUser($term)
     {
-        $q = 'MATCH (n:User) WHERE n.twitterName =~ {term} RETURN collect(n.twitterName) as names
-        UNION ALL
-        MATCH (u:User) WHERE u.firstname =~';
+        $q = 'MATCH (n:User) WHERE n.twitterName =~ {term}
+        OR n.twitterScreenName =~ {term}
+        OR n.firstname =~ {term}
+        OR n.lastname =~ {term}
+        OR n.name =~ {term}
+        RETURN n';
         $p = ['term' => '(?i)'.$term.'.*'];
 
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
 
-        return $result->get('names');
+        return $result->get('n', null, true);
+    }
+
+    public function getUserInfo($uuid)
+    {
+        $q = 'MATCH (n:User {uuid: {uuid}}) RETURN n';
+        $p = ['uuid' => $uuid];
+
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
+
+        return $result->get('n');
     }
 
     private function createTwitterUser(User $user)
     {
         $q = 'MERGE (user:User {twitterId: {id}})
-        SET user :ActiveUser
-        SET user.twitterName = {name}
-        SET user.twitterScreenName = {screenName}
-        SET user.twitterToken = {token}
+        ON CREATE
+        SET user :ActiveUser, user.uuid = {uuid}, user.twitterName = {name},
+        user.twitterScreenName = {screenName}, user.twitterToken = {token}
+        ON MATCH
+        SET user.twitterName = {name}, user.twitterScreenName = {screenName}, user.twitterToken = {token}
         RETURN user';
         $p = [
             'id' => (int) $user->getTwitterId(),
             'screenName' => $user->getTwitterScreenName(),
             'token' => $user->getTwitterToken(),
-            'name'=> $user->getTwitterName()
+            'name'=> $user->getTwitterName(),
+            'uuid' => $user->getUuid()
         ];
         $this->client->sendCypherQuery($q, $p);
 
@@ -186,12 +189,13 @@ class UserRepository
 
     private function createFacebookUser(User $user)
     {
-        $q = 'MERGE (user:User {email: {email}})
+        $q = 'MERGE (user:User {facebookId: {fbId}})
+        ON CREATE SET user.uuid = {uuid}
         SET user :ActiveUser
-        SET user.facebookId = {fbId}
         SET user.firstname = {firstname}
         SET user.lastname = {lastname}
         SET user.facebook_token = {token}
+        SET user.email = {email}
         RETURN user';
 
         $p = [
@@ -199,7 +203,8 @@ class UserRepository
             'fbId' => (int) $user->getFacebookId(),
             'firstname' => $user->getFirstName(),
             'lastname' => $user->getLastName(),
-            'token' => $user->getFacebookToken()
+            'token' => $user->getFacebookToken(),
+            'uuid' => $user->getUuid()
         ];
         $this->client->sendCypherQuery($q, $p);
 

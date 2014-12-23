@@ -1,0 +1,14 @@
+{% if user.active %}
+    {% if user.facebook is defined %}
+        <h3>Facebook</h3>
+        <h4>{{ user.facebook.firstname }} {{ user.facebook.lastname }}</h4>
+        <h5>{{ user.facebook.email }}</h5>
+    {% endif %}
+
+    {% if user.twitter is defined %}
+        <h3>Twitter</h3>
+        <h4>{{ user.twitter.name }} (@{{ user.twitter.screenName }})</h4>
+    {% endif %}
+{% else %}
+    <h3>{{ user.name }}</h3>
+{% endif %}

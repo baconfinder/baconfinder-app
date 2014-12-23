@@ -66,14 +66,14 @@ class UserProvider implements OAuthAwareUserProviderInterface, UserProviderInter
             switch ($userContext->getUser()->getResourceOwner()) {
                 case 'twitter':
                     $join = $this->getFbUserFromResponse($response);
-                    $this->userRepository->joinAccount('twitter', $userContext->getUser()->getTwitterid(), $join);
+                    $this->userRepository->joinAccount('twitter', $userContext->getUser()->getUuid(), $join);
                     $userContext->getUser()->setFacebookId($response->getResponse()['id']);
                     $event = new FacebookImportEvent($userContext->getUser(), $response->getAccessToken());
                     $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::FACEBOOK_IMPORT, $event);
                     break;
                 case 'facebook':
                     $join = $this->getTwitterUserFromResponse($response);
-                    $this->userRepository->joinAccount('facebook', $userContext->getUser()->getEmail(), $join);
+                    $this->userRepository->joinAccount('facebook', $userContext->getUser()->getUuid(), $join);
                     $userContext->getUser()->setTwitterId($response->getResponse()['id']);
                     $event = new TwitterImportEvent($userContext->getUser());
                     $this->eventDispatcher->dispatch(TomSawyerBaconFinderEvents::TWITTER_IMPORT, $event);

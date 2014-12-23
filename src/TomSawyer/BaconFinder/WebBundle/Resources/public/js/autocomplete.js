@@ -27,6 +27,11 @@ $(document).ready(function(){
             select: function( event, ui ) {
                 var handle = ui.item.label;
                 var source = ui.item.value;
+                $('#searchConnection').val(handle);
+                $.get("/app_dev.php/account/user-info/" + source, function(user){
+                    $('#suggestBox').html(user);
+                });
+
 
                 return false;
             }

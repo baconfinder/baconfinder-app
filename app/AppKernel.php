@@ -20,6 +20,7 @@ class AppKernel extends Kernel
             new GraphAware\Neo4jBundle\GraphAwareNeo4jBundle(),
             new TomSawyer\BaconFinder\AppBundle\TomSawyerBaconFinderAppBundle(),
             new TomSawyer\BaconFinder\WebBundle\TomSawyerBaconFinderWebBundle(),
+            new GraphAware\UuidBundle\GraphAwareUuidBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {

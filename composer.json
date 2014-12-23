@@ -18,6 +18,7 @@
         "sensio/framework-extra-bundle": "~3.0",
         "incenteev/composer-parameter-handler": "~2.0",
         "hwi/oauth-bundle": "0.4.*@dev",
+        "rhumsaa/uuid": "~2.8",
         "neoxygen/neoclient": "~2.0.5",
         "facebook/php-sdk-v4" : "4.0.*",
         "guzzlehttp/oauth-subscriber": "~0.2.0"
