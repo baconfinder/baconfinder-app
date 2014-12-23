@@ -41,7 +41,7 @@ class FacebookImporter
         try {
             $this->neo4jClient->sendCypherQuery($q, $p);
         } catch (HttpException $e) {
-            
+
         }
 
     }

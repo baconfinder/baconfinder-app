@@ -30,7 +30,10 @@ class TwitterFriendsImporter
         $q = 'MATCH (user:ActiveUser {twitterId: {user_id} })
         WITH user
         UNWIND {friends} as friend
-        MERGE (followed:User {twitterId: friend.id} )
+        MERGE (followed:User {twitterId: friend.id})
+        ON CREATE
+        SET followed.twitterName = friend.name
+        SET followed.twitterScreenName = friend.screenName
         MERGE (user)-[:CONNECT]->(followed)';
 
         $p = [

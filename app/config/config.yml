@@ -47,6 +47,12 @@ assetic:
             inputs:
                 - 'bower_components/bootstrap/dist/css/bootstrap.min.css'
                 - '@TomSawyerBaconFinderWebBundle/Resources/public/css/style.css'
+                - 'bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css'
+       typeahead_js:
+            inputs:
+                - 'bower_components/jquery/dist/jquery.min.js'
+                - 'bower_components/jquery-ui/jquery-ui.min.js'
+                - '@TomSawyerBaconFinderWebBundle/Resources/public/js/autocomplete.js'
 
 # Doctrine Configuration
 doctrine:

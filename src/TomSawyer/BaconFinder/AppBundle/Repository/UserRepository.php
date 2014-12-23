@@ -53,7 +53,7 @@ class UserRepository
 
     public function getTwitterUserById($id, $token = null)
     {
-        $q = 'MATCH (user:User {twitterId: {id}}) RETURN user';
+        $q = 'MATCH (user:ActiveUser {twitterId: {id}}) RETURN user';
         $p = ['id' => (int) $id];
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
         if (null === $result->get('user')) {
@@ -151,6 +151,18 @@ class UserRepository
         }
 
         return null;
+    }
+
+    public function searchActiveUser($term)
+    {
+        $q = 'MATCH (n:User) WHERE n.twitterName =~ {term} RETURN collect(n.twitterName) as names
+        UNION ALL
+        MATCH (u:User) WHERE u.firstname =~';
+        $p = ['term' => '(?i)'.$term.'.*'];
+
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
+
+        return $result->get('names');
     }
 
     private function createTwitterUser(User $user)

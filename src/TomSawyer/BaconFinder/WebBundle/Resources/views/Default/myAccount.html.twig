@@ -4,7 +4,7 @@
 
     <div class="row">
         <div class="col-sm-6">
-            <h1>{{ app.user.username }}</h1>
+            <h2>{{ app.user.username }}</h2>
             <p>
                 {% if app.user.facebookId %}
                 <button class="btn btn-facebook disabled">
@@ -30,6 +30,20 @@
             <h3>Number of connections :
                 {{ render(controller('TomSawyerBaconFinderWebBundle:Default:connectionsCount')) }}
             </h3>
+        </div>
+
+        <div class="col-sm-6">
+            <h2>
+                Search connection
+            </h2>
+            <div>
+                <form method="POST">
+                    <input type="text" placeholder="Enter name here..." id="searchConnection" name="name" class="ui-autocomplete-input"/>
+                </form>
+            </div>
+            <div id="suggestBox">
+
+            </div>
         </div>
     </div>
 
