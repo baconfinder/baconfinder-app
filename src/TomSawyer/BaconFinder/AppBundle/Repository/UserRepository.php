@@ -196,6 +196,7 @@ class UserRepository
         MATCH p=shortestPath((user)-[*]->(profile))
         WITH filter(x in nodes(p)
         WHERE NOT \'ActiveUser\' in labels(x)
+        AND NOT ((user)-[:FACEBOOK_PROFILE|TWITTER_PROFILE]-(x))
         AND NOT x.uuid = {profile}.uuid
         ) as f
         RETURN length(f) as l';
@@ -262,6 +263,7 @@ class UserRepository
         SET twitter.name = {user}.twitterProfile.name
         SET twitter.token = {user}.twitterProfile.token
         MERGE (user)-[:TWITTER_PROFILE]->(twitter)
+        MERGE (twitter)-[:PROFILE_OF]->(user)
         RETURN user, twitter';
         $p = ['user' => $user->toArray()];
 
@@ -284,6 +286,7 @@ class UserRepository
         SET facebook.token = {user}.facebookProfile.token
         SET facebook.email = {user}.facebookProfile.email
         MERGE (user)-[:FACEBOOK_PROFILE]->(facebook)
+        MERGE (facebook)-[:PROFILE_OF]->(user)
         RETURN user, facebook';
         $p = ['user' => $user->toArray()];
 
