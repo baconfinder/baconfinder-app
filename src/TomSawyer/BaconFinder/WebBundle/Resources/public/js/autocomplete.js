@@ -9,7 +9,7 @@ $(document).ready(function(){
 
     $('#searchConnection').autocomplete({
             source: function( request, response ) {
-                $.post( "/app_dev.php/account/friend/search", {
+                $.post( "/account/friend/search", {
                     term: extractLast( request.term )
                 }, response );
             },
@@ -28,7 +28,7 @@ $(document).ready(function(){
                 var handle = ui.item.label;
                 var source = ui.item.value;
                 $('#searchConnection').val(handle);
-                $.get("/app_dev.php/account/profile-info/" + source, function(user){
+                $.get("/account/profile-info/" + source, function(user){
                     $('#suggestBox').html(user);
                 });
 
