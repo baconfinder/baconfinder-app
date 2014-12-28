@@ -107,6 +107,7 @@ tom_sawyer_bacon_finder_app:
     twitter_app_secret: "%twitter_client_secret%"
     twitter_app_token: "%twitter_app_token%"
     twitter_app_token_secret: "%twitter_app_token_secret%"
+    import_frequency: 432000
 
 hwi_oauth:
     firewall_name: secured_area

@@ -6,7 +6,7 @@
         <div class="col-sm-6">
             <h2>{{ app.user.username }}</h2>
             <p>
-                {% if app.user.facebookId %}
+                {% if app.user.facebookProfile %}
                 <button class="btn btn-facebook disabled">
                     <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Facebook account joined
                 </button>
@@ -16,7 +16,7 @@
                     </button>
                 {% endif %}
 
-                {% if app.user.twitterId %}
+                {% if app.user.twitterProfile %}
                     <button class="btn btn-twitter disabled">
                         <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Twitter account joined
                     </button>

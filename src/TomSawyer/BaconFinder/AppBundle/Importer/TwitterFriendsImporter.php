@@ -2,9 +2,9 @@
 
 namespace TomSawyer\BaconFinder\AppBundle\Importer;
 
-use TomSawyer\BaconFinder\AppBundle\Twitter\TwitterClient;
-use TomSawyer\BaconFinder\AppBundle\Event\TwitterImportEvent;
 use GraphAware\UuidBundle\Service\UuidService;
+use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
+use TomSawyer\BaconFinder\AppBundle\Twitter\TwitterClient;
 use Neoxygen\NeoClient\Client;
 
 class TwitterFriendsImporter
@@ -22,34 +22,41 @@ class TwitterFriendsImporter
         $this->uuid = $uuid;
     }
 
-    public function onTwitterImport(TwitterImportEvent $event)
+    public function importFriends(UserResponseInterface $response)
     {
-        $user = $event->getUser();
-        $this->importFriendsForUser($user->getTwitterId());
+        $friends = $this->getFriends($response->getUsername());
+        $this->importFriendsForUser($response->getUsername(), $friends);
     }
 
-    public function importFriendsForUser($userId)
+    public function importFriendsForUser($userId, $friends)
     {
-        $response = $this->twitterClient->getFriends($userId);
-        $friends = [];
-        foreach ($response as $friend) {
-            $friend['uuid'] = $this->uuid->getUuid();
-            $friends[] = $friend;
-        }
-        $q = 'MATCH (user:ActiveUser {twitterId: {user_id} })
-        WITH user
+
+        $q = 'MATCH (tw:TwitterProfile {id: {id} })
+        WITH tw
         UNWIND {friends} as friend
-        MERGE (followed:User {twitterId: friend.id})
+        MERGE (twf:TwitterProfile {id: friend.id})
         ON CREATE
-        SET followed.twitterName = friend.name, followed.twitterScreenName = friend.screenName,
-        followed.uuid = friend.uuid
-        MERGE (user)-[:CONNECT]->(followed)';
+        SET twf.name = friend.name, twf.screen_name = friend.screenName, twf.uuid = friend.uuid
+        MERGE (tw)-[:FOLLOW_ON_TWITTER]->(twf)';
 
         $p = [
-            'user_id' => (int) $userId,
+            'id' => (int) $userId,
             'friends' => $friends
         ];
 
         $this->neo4jClient->sendCypherQuery($q, $p)->getResult();
+    }
+
+    private function getFriends($userId)
+    {
+        $response = $this->twitterClient->getFriends($userId);
+        $friends = [];
+        foreach ($response as $friend) {
+            $friend['twitterId'] = (int) $friend['id'];
+            $friend['uuid'] = $this->uuid->getUuid();
+            $friends[] = $friend;
+        }
+
+        return $friends;
     }
 }

@@ -28,6 +28,7 @@ class TomSawyerBaconFinderAppExtension extends Extension
         $container->setParameter('twitter.app_id', $config['twitter_app_id']);
         $container->setParameter('twitter.app_token', $config['twitter_app_token']);
         $container->setParameter('twitter.app_token_secret', $config['twitter_app_token_secret']);
+        $container->setParameter('import_frequency', (int) $config['import_frequency']);
 
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');

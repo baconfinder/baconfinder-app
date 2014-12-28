@@ -2,73 +2,108 @@
 
 namespace TomSawyer\BaconFinder\AppBundle\Repository;
 
+use GraphAware\UuidBundle\Service\UuidService;
 use Neoxygen\NeoClient\Client;
-use TomSawyer\BaconFinder\AppBundle\Model\User,
-    TomSawyer\BaconFinder\AppBundle\Manager\UserManager;
+use TomSawyer\BaconFinder\AppBundle\Model\SocialProfileInterface;
+use TomSawyer\BaconFinder\AppBundle\Model\User;
+use TomSawyer\BaconFinder\AppBundle\Model\UserMapper;
 
 class UserRepository
 {
     protected $client;
 
-    protected $userManager;
+    protected $mapper;
 
-    protected $logger;
+    protected $uuid;
 
-    public function __construct(Client $client, UserManager $userManager)
+    public function __construct(Client $client, UuidService $uuid)
     {
         $this->client = $client;
-        $this->userManager = $userManager;
+        $this->mapper = new UserMapper();
+        $this->uuid = $uuid;
     }
 
-    public function getFacebookUserByEmail($email, $token = null)
+    public function findUserByUuid($uuid)
     {
-        $q = 'MATCH (user:ActiveUser {email: {email}}) ';
-        if (null !== $token) {
-            $q .= 'SET user.facebook_token = {token}
-            ';
-            $p['token'] = $token;
-        }
-        $q .= 'RETURN user';
-        $p['email'] = $email;
+        $q = 'MATCH (user:User {uuid: {uuid}})
+        OPTIONAL MATCH (user)-[:FACEBOOK_PROFILE]->(fb)
+        OPTIONAL MATCH (user)-[:TWITTER_PROFILE]->(tw)
+        RETURN user, fb, tw';
+        $p = ['uuid' => (int) $uuid];
 
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
-        $user = $result->get('user');
+        if (null !== $result->get('user')) {
 
-        if (null === $user) {
-            return null;
+            return $this->mapper->hydrate($result->get('user'), $result->get('fb'), $result->get('tw'));
         }
-        $token = $user->hasProperty('facebook_token') ? $user->getProperty('facebook_token') : null;
 
-        $fbUser = $this->userManager->createFacebookUser(
-            $user->getProperty('email'),
-            $user->getProperty('facebookId'),
-            $user->getProperty('firstname'),
-            $user->getProperty('lastname'),
-            $token
-        );
-        $fbUser->setTwitterId($user->hasProperty('twitterId'));
-        $fbUser->setUuid($user->getProperty('uuid'));
-
-        return $fbUser;
+        return null;
     }
 
-    public function getTwitterUserById($id, $token = null)
+    public function getFacebookUserById($id)
     {
-        $q = 'MATCH (user:ActiveUser {twitterId: {id}}) RETURN user';
+        $q = 'MATCH (fb:FacebookProfile {id: {id}})
+        WITH fb
+        MATCH (fb)<-[:FACEBOOK_PROFILE]-(u)
+        OPTIONAL MATCH (u)-[:TWITTER_PROFILE]->(tw)
+        RETURN u, fb, tw';
+        $p = ['id' => $id];
+
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
+        if ($result->get('u') !== null) {
+            return $this->mapper->hydrate($result->get('u'), $result->get('fb'), $result->get('tw'));
+        }
+
+        return null;
+    }
+
+    public function getTwitterUserById($id)
+    {
+        $q = 'MATCH (tw:TwitterProfile {id: {id}})
+        WITH tw
+        OPTIONAL MATCH (tw)<-[:TWITTER_PROFILE]-(u)
+        OPTIONAL MATCH (u)-[:FACEBOOK_PROFILE]->(fb)
+        RETURN u, tw, fb';
         $p = ['id' => (int) $id];
+
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
-        if (null === $result->get('user')) {
-            return null;
+        if ($result->get('u') !== null) {
+            return $this->mapper->hydrate($result->get('u'), $result->get('fb'), $result->get('tw'));
         }
-        $tUser = $result->get('user');
-        $user = new User();
-        $user->setResourceOwner('twitter');
-        $user->setTwitterToken($token);
-        $user->setTwitterId($tUser->getProperty('twitterId'));
-        $user->setTwitterScreenName($tUser->getProperty('twitterScreenName'));
-        $user->setTwitterName($tUser->getProperty('twitterName'));
-        $user->setFacebookId($tUser->hasProperty('facebookId'));
-        $user->setUuid($tUser->getProperty('uuid'));
+
+        return null;
+    }
+
+    public function update(User $user)
+    {
+        $q = 'MATCH (user:User {uuid: {user}.uuid}) ';
+        if (null !== $user->getFacebookProfile()) {
+            if (null === $user->getFacebookProfile()->getUuid()) {
+                $user->getFacebookProfile()->setUuid($this->uuid->getUuid());
+            }
+            $q .= 'MERGE (fb:FacebookProfile {id: {user}.facebookProfile.id})
+            ON CREATE SET fb.first_name = {user}.facebookProfile.first_name,
+            fb.last_name = {user}.facebookProfile.last_name,
+            fb.email = {user}.facebookProfile.email,
+            fb.uuid = {user}.facebookProfile.uuid
+            SET fb.token = {user}.facebookProfile.token
+            SET fb.last_import_time = {user}.facebookProfile.last_import_time
+            MERGE (user)-[:FACEBOOK_PROFILE]->(fb) ';
+        }
+        if (null !== $user->getTwitterProfile()) {
+            if (null === $user->getTwitterProfile()->getUuid()) {
+                $user->getTwitterProfile()->setUuid($this->uuid->getUuid());
+            }
+            $q .= 'MERGE (tw:TwitterProfile {id: {user}.twitterProfile.id})
+            ON CREATE SET tw.screen_name = {user}.twitterProfile.screen_name,
+            tw.name = {user}.twitterProfile.name,
+            tw.uuid = {user}.twitterProfile.uuid
+            SET tw.token = {user}.twitterProfile.token
+            SET tw.last_import_time = {user}.twitterProfile.last_import_time
+            MERGE (user)-[:TWITTER_PROFILE]->(tw) ';
+        }
+        $p = ['user' => $user->toArray()];
+        $this->client->sendCypherQuery($q, $p);
 
         return $user;
     }
@@ -87,51 +122,14 @@ class UserRepository
         }
     }
 
-    public function joinAccount($owner, $uuid, User $user)
-    {
-        switch ($owner) {
-            case 'facebook':
-                $q = 'MATCH (user:ActiveUser {uuid: {uuid}})
-                SET user.twitterId = {twitterId}
-                SET user.twitterName = {twitterName}
-                SET user.twitterScreenName = {screenName}
-                SET user.twitterToken = {token}';
-                $p = [
-                    'twitterId' => (int) $user->getTwitterId(),
-                    'twitterName' => $user->getTwitterName(),
-                    'screenName' => $user->getTwitterScreenName(),
-                    'token' => $user->getTwitterToken(),
-                    'uuid' => $uuid
-                ];
-                $this->client->sendCypherQuery($q, $p);
-                break;
-
-            case 'twitter':
-                $q = 'MATCH (user:ActiveUser {uuid: {uuid}})
-                SET user.facebookId = {fbId}
-                SET user.firstname = {firstname}
-                SET user.lastname = {lastname}
-                SET user.facebookToken = {token}
-                SET user.email = {email}
-                RETURN user';
-                $p = [
-                    'fbId' => (int) $user->getFacebookId(),
-                    'firstname' => $user->getFirstname(),
-                    'lastname' => $user->getLastname(),
-                    'token' => $user->getFacebookToken(),
-                    'email' => $user->getEmail(),
-                    'uuid' => $uuid
-                ];
-                $this->client->sendCypherQuery($q, $p);
-                break;
-        }
-    }
 
     public function getUserConnectionsCount(User $user)
     {
         $q = 'MATCH (n:ActiveUser {uuid: {uuid}})
-        OPTIONAL MATCH (n)-[:CONNECT]->(o)
-        RETURN count(o) as connections';
+        OPTIONAL MATCH (n)-[:FACEBOOK_PROFILE|TWITTER_PROFILE]->(p)
+        WITH (p)
+        OPTIONAL MATCH (p)-[:FACEBOOK_FRIEND|FOLLOW_ON_TWITTER]->(other)
+        RETURN count(distinct other) as connections';
         $p = [
             'uuid' => $user->getUuid()
         ];
@@ -141,19 +139,105 @@ class UserRepository
         return $result->get('connections');
     }
 
-    public function searchActiveUser($term)
+    public function searchActiveUser($term, $currentUser)
     {
-        $q = 'MATCH (n:User) WHERE n.twitterName =~ {term}
-        OR n.twitterScreenName =~ {term}
-        OR n.firstname =~ {term}
-        OR n.lastname =~ {term}
-        OR n.name =~ {term}
-        RETURN n';
-        $p = ['term' => '(?i)'.$term.'.*'];
+        $q = 'MATCH (user:ActiveUser {uuid: {currentUser}.uuid}), (n:TwitterProfile)
+        WHERE ( n.name =~ {term} OR n.screen_name =~ {term} )
+        AND NOT (user)-[:TWITTER_PROFILE]->(n)
+        RETURN n as suggestions, user
+        UNION
+        MATCH (user:ActiveUser {uuid: {currentUser}.uuid}), (n:FacebookProfile)
+        WHERE ( n.first_name =~ {term} OR n.last_name =~ {term} OR n.name =~ {term} )
+        AND NOT (user)-[:FACEBOOK_PROFILE]->(n)
+        RETURN n as suggestions, user
+        ';
+        $p = ['term' => '(?i)'.$term.'.*', 'currentUser' => $currentUser->toArray()];
 
         $result = $this->client->sendCypherQuery($q, $p)->getResult();
 
-        return $result->get('n', null, true);
+        if (null === $result->get('suggestions')) {
+            return array();
+        }
+
+        return $this->mapper->hydrateProfileCollection($result->get('suggestions', null, true));
+    }
+
+    public function getNodeById($id)
+    {
+        $q = 'MATCH (n) WHERE id(n) = {id} RETURN n';
+        $p = ['id' => $id];
+
+        $result = $this->client->sendCypherQuery($q, $p);
+
+        return $result->getSingleNode();
+    }
+
+    public function getProfileByUuid($uuid)
+    {
+        $q = 'MATCH (profile {uuid:{uuid}})
+        WHERE profile :FacebookProfile
+        OR profile :TwitterProfile
+        RETURN profile';
+        $p = ['uuid' => $uuid];
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
+        if (null !== $result->get('profile')) {
+            return $this->mapper->hydrateProfile($result->get('profile'));
+        } else {
+            return null;
+        }
+    }
+
+    public function getBacon(User $user, SocialProfileInterface $profile)
+    {
+        $profileName = ucfirst($profile->getProfileName()).'Profile';
+        $q = 'MATCH (user:ActiveUser {uuid: {user}.uuid})
+        WITH user
+        MATCH (profile:'.$profileName.' {uuid:{profile}.uuid})
+        MATCH p=shortestPath((user)-[*]->(profile))
+        WITH filter(x in nodes(p)
+        WHERE NOT \'ActiveUser\' in labels(x)
+        AND NOT ((user)-[:FACEBOOK_PROFILE|TWITTER_PROFILE]-(x))
+        AND NOT x.uuid = {profile}.uuid
+        ) as f
+        RETURN length(f) as l';
+        $p = ['user' => $user->toArray(), 'profile' => $profile->toArray()];
+        $result = $this->client->sendCypherQuery($q, $p)->getResult();
+
+        return $result->get('l');
+    }
+
+    public function getFacebookUserFromProfileId($id)
+    {
+        $q = 'MATCH (n) WHERE id(n) = {id}
+        WITH n
+        MATCH (n)<-[:FACEBOOK_PROFILE]-(user)
+        RETURN user, n';
+        $p = ['id' => $id];
+
+        $result = $this->client->sendCypherQuery($q, $p);
+        $user = $result->get('user');
+        if (null !== $user) {
+            return $this->mapper->hydrate($user, $result->get('n'));
+        }
+
+        return null;
+    }
+
+    public function getTwitterUserFromProfileId($id)
+    {
+        $q = 'MATCH (n) WHERE id(n) = {id}
+        WITH n
+        MATCH (n)<-[:TWITTER_PROFILE]-(user)
+        RETURN user, n';
+        $p = ['id' => $id];
+
+        $result = $this->client->sendCypherQuery($q, $p);
+        $user = $result->get('user');
+        if (null !== $user) {
+            return $this->mapper->hydrate($user, null, $result->get('n'));
+        }
+
+        return null;
     }
 
     public function getUserInfo($uuid)
@@ -168,20 +252,20 @@ class UserRepository
 
     private function createTwitterUser(User $user)
     {
-        $q = 'MERGE (user:User {twitterId: {id}})
-        ON CREATE
-        SET user :ActiveUser, user.uuid = {uuid}, user.twitterName = {name},
-        user.twitterScreenName = {screenName}, user.twitterToken = {token}
-        ON MATCH
-        SET user.twitterName = {name}, user.twitterScreenName = {screenName}, user.twitterToken = {token}
-        RETURN user';
-        $p = [
-            'id' => (int) $user->getTwitterId(),
-            'screenName' => $user->getTwitterScreenName(),
-            'token' => $user->getTwitterToken(),
-            'name'=> $user->getTwitterName(),
-            'uuid' => $user->getUuid()
-        ];
+        $user->setUuid($this->uuid->getUuid());
+        $user->getTwitterProfile()->setUuid($this->uuid->getUuid());
+
+        $q = 'MERGE (user:User {uuid: {user}.uuid})
+        SET user :ActiveUser
+        MERGE (twitter:TwitterProfile {id: {user}.twitterProfile.id})
+        SET twitter.uuid = {user}.twitterProfile.uuid
+        SET twitter.screen_name = {user}.twitterProfile.screen_name
+        SET twitter.name = {user}.twitterProfile.name
+        SET twitter.token = {user}.twitterProfile.token
+        MERGE (user)-[:TWITTER_PROFILE]->(twitter)
+        RETURN user, twitter';
+        $p = ['user' => $user->toArray()];
+
         $this->client->sendCypherQuery($q, $p);
 
         return $user;
@@ -189,23 +273,21 @@ class UserRepository
 
     private function createFacebookUser(User $user)
     {
-        $q = 'MERGE (user:User {facebookId: {fbId}})
-        ON CREATE SET user.uuid = {uuid}
-        SET user :ActiveUser
-        SET user.firstname = {firstname}
-        SET user.lastname = {lastname}
-        SET user.facebook_token = {token}
-        SET user.email = {email}
-        RETURN user';
+        $user->setUuid($this->uuid->getUuid());
+        $user->getFacebookProfile()->setUuid($this->uuid->getUuid());
 
-        $p = [
-            'email' => $user->getEmail(),
-            'fbId' => (int) $user->getFacebookId(),
-            'firstname' => $user->getFirstName(),
-            'lastname' => $user->getLastName(),
-            'token' => $user->getFacebookToken(),
-            'uuid' => $user->getUuid()
-        ];
+        $q = 'MERGE (user:User {uuid: {user}.uuid})
+        SET user :ActiveUser
+        MERGE (facebook:FacebookProfile {id: {user}.facebookProfile.id})
+        SET facebook.uuid = {user}.facebookProfile.uuid
+        SET facebook.first_name = {user}.facebookProfile.first_name
+        SET facebook.last_name = {user}.facebookProfile.last_name
+        SET facebook.token = {user}.facebookProfile.token
+        SET facebook.email = {user}.facebookProfile.email
+        MERGE (user)-[:FACEBOOK_PROFILE]->(facebook)
+        RETURN user, facebook';
+        $p = ['user' => $user->toArray()];
+
         $this->client->sendCypherQuery($q, $p);
 
         return $user;

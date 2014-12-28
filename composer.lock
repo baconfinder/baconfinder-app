@@ -1346,16 +1346,16 @@
         },
         {
             "name": "neoxygen/neoclient",
-            "version": "2.0.5",
+            "version": "2.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/neoxygen/neo4j-neoclient.git",
-                "reference": "553617b25e18e01ac7fe30e96f17b2970227f322"
+                "reference": "5e50a5e1c0ce179935bc198a2bf8dceb08c79275"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/neoxygen/neo4j-neoclient/zipball/553617b25e18e01ac7fe30e96f17b2970227f322",
-                "reference": "553617b25e18e01ac7fe30e96f17b2970227f322",
+                "url": "https://api.github.com/repos/neoxygen/neo4j-neoclient/zipball/5e50a5e1c0ce179935bc198a2bf8dceb08c79275",
+                "reference": "5e50a5e1c0ce179935bc198a2bf8dceb08c79275",
                 "shasum": ""
             },
             "require": {
@@ -1404,7 +1404,7 @@
                 "high-availibility",
                 "neo4j"
             ],
-            "time": "2014-12-20 22:14:41"
+            "time": "2014-12-23 23:03:07"
         },
         {
             "name": "psr/log",
@@ -1901,12 +1901,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/symfony.git",
-                "reference": "7ebb6858059ea6d20771973f5e6f5c79490f662c"
+                "reference": "b0d73f3765a471c18fb978d124d184d051362aae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/symfony/zipball/7ebb6858059ea6d20771973f5e6f5c79490f662c",
-                "reference": "7ebb6858059ea6d20771973f5e6f5c79490f662c",
+                "url": "https://api.github.com/repos/symfony/symfony/zipball/b0d73f3765a471c18fb978d124d184d051362aae",
+                "reference": "b0d73f3765a471c18fb978d124d184d051362aae",
                 "shasum": ""
             },
             "require": {
@@ -2009,7 +2009,7 @@
             "keywords": [
                 "framework"
             ],
-            "time": "2014-12-23 17:36:09"
+            "time": "2014-12-24 10:55:18"
         },
         {
             "name": "twig/extensions",

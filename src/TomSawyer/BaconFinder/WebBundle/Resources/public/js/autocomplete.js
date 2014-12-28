@@ -28,7 +28,7 @@ $(document).ready(function(){
                 var handle = ui.item.label;
                 var source = ui.item.value;
                 $('#searchConnection').val(handle);
-                $.get("/app_dev.php/account/user-info/" + source, function(user){
+                $.get("/app_dev.php/account/profile-info/" + source, function(user){
                     $('#suggestBox').html(user);
                 });
 

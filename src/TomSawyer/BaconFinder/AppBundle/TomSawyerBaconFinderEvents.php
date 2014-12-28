@@ -4,7 +4,7 @@ namespace TomSawyer\BaconFinder\AppBundle;
 
 final class TomSawyerBaconFinderEvents
 {
-    const TWITTER_IMPORT = 'bacon_finder.twitter_import';
+    const SOCIAL_CONNECT = 'bacon_finder.social_connect';
 
-    const FACEBOOK_IMPORT = 'bacon_finder.facebook_import';
+    const SOCIAL_IMPORT_COMPLETED = 'bacon_finder.social_import_completed';
 }

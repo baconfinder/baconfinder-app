@@ -21,12 +21,14 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->root('tom_sawyer_bacon_finder_app');
 
         $rootNode->children()
-            ->scalarNode('fb_app_id')->end()
-            ->scalarNode('fb_app_secret')->end()
-            ->scalarNode('twitter_app_id')->end()
-            ->scalarNode('twitter_app_secret')->end()
-            ->scalarNode('twitter_app_token')->end()
-            ->scalarNode('twitter_app_token_secret')->end()
+            ->scalarNode('fb_app_id')->isRequired()->end()
+            ->scalarNode('fb_app_secret')->isRequired()->end()
+            ->scalarNode('twitter_app_id')->isRequired()->end()
+            ->scalarNode('twitter_app_secret')->isRequired()->end()
+            ->scalarNode('twitter_app_token')->isRequired()->end()
+            ->scalarNode('twitter_app_token_secret')->isRequired()->end()
+            ->integerNode('import_frequency')->isRequired()->end()
+            ->scalarNode('user_class')->defaultValue('TomSawyer\BaconFinder\AppBundle\Model\User')->end()
             ->end();
 
         return $treeBuilder;

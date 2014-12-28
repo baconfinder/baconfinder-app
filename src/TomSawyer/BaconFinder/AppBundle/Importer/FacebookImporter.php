@@ -2,11 +2,13 @@
 
 namespace TomSawyer\BaconFinder\AppBundle\Importer;
 
+use GraphAware\UuidBundle\Service\UuidService;
+use HWI\Bundle\OAuthBundle\OAuth\Response\UserResponseInterface;
 use Neoxygen\NeoClient\Client;
 use Neoxygen\NeoClient\Exception\HttpException;
-use GraphAware\UuidBundle\Service\UuidService;
+use Symfony\Component\Security\Core\User\UserInterface;
 use TomSawyer\BaconFinder\AppBundle\Facebook\Facebook;
-use TomSawyer\BaconFinder\AppBundle\Event\FacebookImportEvent;
+use TomSawyer\BaconFinder\AppBundle\Manager\UserManager;
 
 class FacebookImporter
 {
@@ -23,30 +25,41 @@ class FacebookImporter
         $this->uuid = $uuid;
     }
 
-    public function onFacebookImport(FacebookImportEvent $event)
+    public function importFriends(UserResponseInterface $response)
     {
-        $friends = $this->facebookClient->getUserFriends($event->getToken());
-        if (!empty($friends)) {
-            $this->importFacebookFriends($event->getUser(), $friends);
-        }
+
+        $friends = $this->getFriends($response->getAccessToken());
+        $this->importFacebookFriends($response->getUsername(), $friends);
     }
 
-    private function importFacebookFriends($user, array $friends)
+    private function getFriends($token)
     {
+        $friends = $this->facebookClient->getUserFriends($token);
         $newFriends = [];
         foreach ($friends as $friend) {
-            $friend['uuid'] = $this->uuid->getUuid();
             $friend['id'] = (int) $friend['facebookId'];
+            $friend['uuid'] = $this->uuid->getUuid();
             $newFriends[] = $friend;
         }
-        $q = 'MATCH (user:ActiveUser {facebookId: {id}})
+
+        return $newFriends;
+    }
+
+    private function importFacebookFriends($facebookId, array $friends)
+    {
+        if (count($friends) <= 0) {
+
+            return null;
+        }
+
+        $q = 'MATCH (fb:FacebookProfile {id: {id}})
         UNWIND {friends} as friend
-        MERGE (fr:User {facebookId: friend.id})
-        ON CREATE SET fr.name = friend.name, fr.uuid = friend.uuid
-        MERGE (user)-[:CONNECT]->(fr)';
+        MERGE (fbf:FacebookProfile {id: friend.id})
+        ON CREATE SET fbf.name = friend.name, fbf.uuid = friend.uuid
+        MERGE (fb)-[:FACEBOOK_FRIEND]->(fbf)';
         $p = [
-            'id' => (int) $user->getFacebookId(),
-            'friends' => $newFriends
+            'id' => (int) $facebookId,
+            'friends' => $friends
         ];
         try {
             $this->neo4jClient->sendCypherQuery($q, $p);

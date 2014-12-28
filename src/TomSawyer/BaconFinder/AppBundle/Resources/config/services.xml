@@ -7,21 +7,18 @@
     <services>
         <service id="tom_sawyer.bacon_finder.security.user_provider" class="TomSawyer\BaconFinder\AppBundle\Security\UserProvider">
             <argument type="service" id="tom_sawyer.bacon_finder.user_manager"></argument>
-            <argument type="service" id="tom_sawyer.bacon_finder.user_repository"></argument>
             <argument type="service" id="security.token_storage"></argument>
-            <argument type="service" id="logger"></argument>
-            <argument type="service" id="tom_sawyer.bacon_finder.facebook"></argument>
-            <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
             <argument type="service" id="event_dispatcher"></argument>
         </service>
 
         <service id="tom_sawyer.bacon_finder.user_manager" class="TomSawyer\BaconFinder\AppBundle\Manager\UserManager">
+            <argument type="service" id="tom_sawyer.bacon_finder.user_repository"></argument>
             <argument type="service" id="graph_aware.uuid"></argument>
         </service>
 
         <service id="tom_sawyer.bacon_finder.user_repository" class="TomSawyer\BaconFinder\AppBundle\Repository\UserRepository">
             <argument type="service" id="ga.neo4j"></argument>
-            <argument type="service" id="tom_sawyer.bacon_finder.user_manager"></argument>
+            <argument type="service" id="graph_aware.uuid"></argument>
         </service>
 
         <service id="tom_sawyer.bacon_finder.facebook" class="TomSawyer\BaconFinder\AppBundle\Facebook\Facebook">
@@ -36,18 +33,28 @@
             <argument>%twitter.app_token_secret%</argument>
         </service>
 
+        <service id="tom_sawyer.bacon_finder.social_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\SocialImporter">
+            <argument type="service" id="tom_sawyer.bacon_finder.facebook_importer"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.twitter_importer"></argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.user_manager"></argument>
+        </service>
+
+        <service id="tom_sawyer.bacon_finder.connect_listener" class="TomSawyer\BaconFinder\AppBundle\Listener\SocialConnectListener">
+            <argument>%import_frequency%</argument>
+            <argument type="service" id="tom_sawyer.bacon_finder.social_importer"></argument>
+            <tag name="kernel.event_listener" event="bacon_finder.social_connect" method="onSocialConnect"/>
+        </service>
+
         <service id="tom_sawyer.bacon_finder.twitter_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\TwitterFriendsImporter">
             <argument type="service" id="tom_sawyer.bacon_finder.twitter"></argument>
             <argument type="service" id="ga.neo4j"></argument>
             <argument type="service" id="graph_aware.uuid"></argument>
-            <tag name="kernel.event_listener" event="bacon_finder.twitter_import" method="onTwitterImport" />
         </service>
 
         <service id="tom_sawyer.bacon_finder.facebook_importer" class="TomSawyer\BaconFinder\AppBundle\Importer\FacebookImporter">
             <argument type="service" id="tom_sawyer.bacon_finder.facebook"></argument>
             <argument type="service" id="ga.neo4j"></argument>
             <argument type="service" id="graph_aware.uuid"></argument>
-            <tag name="kernel.event_listener" event="bacon_finder.facebook_import" method="onFacebookImport" />
         </service>
     </services>
 </container>

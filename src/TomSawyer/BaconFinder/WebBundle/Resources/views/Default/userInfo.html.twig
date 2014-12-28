@@ -1,14 +1,19 @@
-{% if user.active %}
-    {% if user.facebook is defined %}
-        <h3>Facebook</h3>
-        <h4>{{ user.facebook.firstname }} {{ user.facebook.lastname }}</h4>
-        <h5>{{ user.facebook.email }}</h5>
-    {% endif %}
-
-    {% if user.twitter is defined %}
-        <h3>Twitter</h3>
-        <h4>{{ user.twitter.name }} (@{{ user.twitter.screenName }})</h4>
-    {% endif %}
-{% else %}
-    <h3>{{ user.name }}</h3>
+{% if profile.profileName == 'facebook' %}
+<h2>Facebook User</h2>
+{% elseif profile.profileName == 'twitter' %}
+<h2>Twitter Profile</h2>
 {% endif %}
+
+<h3>{{ profile }}</h3>
+<h5>Separation degree : {{ bacon }}
+{% if profile.isActive %}
+<span class="label label-info">Active User</span>
+{% else %}
+    <span class="label label-warning">Non-active User</span>
+    {% if profile.profileName == 'twitter' %}
+        <a href="https://twitter.com/intent/tweet?text=Hey @{{ profile.screenName }} you should join us on http://baconfinder.com" target="_blank"> Invite on Twitter</a>
+    {% elseif profile.profileName == 'facebook' %}
+        <a href="https://www.facebook.com/sharer/sharer.php?u=Hey {{ profile.__toString }} you should join us on http://baconfinder.com" target="_blank"> Invite on Facebook</a>
+    {% endif %}
+{% endif %}
+</h5>
