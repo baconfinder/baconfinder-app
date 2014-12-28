@@ -196,7 +196,6 @@ class UserRepository
         MATCH p=shortestPath((user)-[*]->(profile))
         WITH filter(x in nodes(p)
         WHERE NOT \'ActiveUser\' in labels(x)
-        AND NOT ((user)-[:FACEBOOK_PROFILE|TWITTER_PROFILE]-(x))
         AND NOT x.uuid = {profile}.uuid
         ) as f
         RETURN length(f) as l';
