@@ -111,6 +111,13 @@ class User implements UserInterface, EquatableInterface
         return $this->resourceOwner;
     }
 
+    public function getProfile()
+    {
+        $getter = 'get'.ucfirst($this->getResourceOwner()).'Profile';
+
+        return $this->$getter();
+    }
+
     /**
      * @param mixed $resourceOwner
      */

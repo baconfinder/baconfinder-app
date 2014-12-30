@@ -85,7 +85,8 @@ class UserRepository
             ON CREATE SET fb.first_name = {user}.facebookProfile.first_name,
             fb.last_name = {user}.facebookProfile.last_name,
             fb.email = {user}.facebookProfile.email,
-            fb.uuid = {user}.facebookProfile.uuid
+            fb.uuid = {user}.facebookProfile.uuid,
+            fb.avatar = {user}.facebookProfile.avatar
             SET fb.token = {user}.facebookProfile.token
             SET fb.last_import_time = {user}.facebookProfile.last_import_time
             MERGE (user)-[:FACEBOOK_PROFILE]->(fb) ';
@@ -285,6 +286,7 @@ class UserRepository
         SET facebook.last_name = {user}.facebookProfile.last_name
         SET facebook.token = {user}.facebookProfile.token
         SET facebook.email = {user}.facebookProfile.email
+        SET facebook.avatar = {user}.facebookProfile.avatar
         MERGE (user)-[:FACEBOOK_PROFILE]->(facebook)
         MERGE (facebook)-[:PROFILE_OF]->(user)
         RETURN user, facebook';

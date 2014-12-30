@@ -71,6 +71,9 @@ class UserMapper
             $t->setTimestamp($node->getProperty('last_import_time'));
             $profile->setLastImportTime($t);
         }
+        if ($node->hasProperty('avatar')) {
+            $profile->setAvatar($node->getProperty('avatar'));
+        }
 
         return $profile;
     }

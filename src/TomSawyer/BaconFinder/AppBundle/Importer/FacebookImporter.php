@@ -32,6 +32,13 @@ class FacebookImporter
         $this->importFacebookFriends($response->getUsername(), $friends);
     }
 
+    public function getPicture(UserResponseInterface $response)
+    {
+        $pic = $this->facebookClient->getProfilePicture($response->getAccessToken());
+
+        return $pic;
+    }
+
     private function getFriends($token)
     {
         $friends = $this->facebookClient->getUserFriends($token);

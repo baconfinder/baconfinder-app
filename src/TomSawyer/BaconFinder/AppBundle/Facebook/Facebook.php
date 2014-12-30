@@ -48,4 +48,22 @@ class Facebook
 
         return $friends;
     }
+
+    public function getProfilePicture($token)
+    {
+        $session = new FacebookSession($token);
+        $request = new FacebookRequest(
+            $session,
+            'GET',
+            '/me/picture',
+            array(
+                'redirect' => false
+            )
+        );
+        $response = $request->execute();
+        $res = $response->getGraphObject();
+        $url = $res->getProperty('url');
+
+        return $url;
+    }
 }

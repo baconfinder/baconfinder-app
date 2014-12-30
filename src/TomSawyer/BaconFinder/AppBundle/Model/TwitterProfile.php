@@ -18,6 +18,8 @@ class TwitterProfile implements SocialProfileInterface
 
     protected $lastImportTime;
 
+    protected $avatar;
+
     public function __construct($twitterId)
     {
         $this->twitterId = $twitterId;
@@ -94,6 +96,21 @@ class TwitterProfile implements SocialProfileInterface
     public function setLastImportTime(\DateTime $time)
     {
         $this->lastImportTime = $time->getTimestamp();
+    }
+
+    public function setAvatar($v)
+    {
+        if (null !== $v) {
+            $v = (string) $v;
+            if ($this->avatar !== $v) {
+                $this->avatar = $v;
+            }
+        }
+    }
+
+    public function getAvatar()
+    {
+        return $this->avatar;
     }
 
     /**

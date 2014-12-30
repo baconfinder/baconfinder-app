@@ -20,6 +20,8 @@ class FacebookProfile implements SocialProfileInterface
 
     protected $name;
 
+    protected $avatar;
+
     protected $lastImportTime;
 
     public function __construct($id, $email = null, $firstname = null, $lastname = null, $name = null)
@@ -162,6 +164,22 @@ class FacebookProfile implements SocialProfileInterface
         return 'facebook';
     }
 
+    public function setAvatar($v)
+    {
+        if (null !== $v) {
+            $v = (string) $v;
+
+            if ($this->avatar !== $v) {
+                $this->avatar = $v;
+            }
+        }
+    }
+
+    public function getAvatar()
+    {
+        return $this->avatar;
+    }
+
     public function __toString()
     {
         if (null !== $this->firstname) {
@@ -181,6 +199,7 @@ class FacebookProfile implements SocialProfileInterface
             'email' => $this->email,
             'token' => $this->token,
             'name' => $this->name,
+            'avatar' => $this->avatar,
             'last_import_time' => $this->lastImportTime
         );
     }

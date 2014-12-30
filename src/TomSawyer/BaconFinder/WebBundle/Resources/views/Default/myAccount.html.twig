@@ -4,7 +4,8 @@
 
     <div class="row">
         <div class="col-sm-6">
-            <h2>{{ app.user.username }}</h2>
+            <h2><img src="{{ app.user.profile.avatar }}" alt="profilePicture"/>
+                {{ app.user.username }}</h2>
             <p>
                 {% if app.user.facebookProfile %}
                 <button class="btn btn-facebook disabled">
@@ -30,6 +31,8 @@
             <h3>Number of connections :
                 {{ render(controller('TomSawyerBaconFinderWebBundle:Default:connectionsCount')) }}
             </h3>
+
+            <hr />
         </div>
 
         <div class="col-sm-6">

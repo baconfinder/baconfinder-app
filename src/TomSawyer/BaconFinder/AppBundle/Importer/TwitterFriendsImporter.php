@@ -47,6 +47,13 @@ class TwitterFriendsImporter
         $this->neo4jClient->sendCypherQuery($q, $p)->getResult();
     }
 
+    public function getUserPicture($response)
+    {
+        $userInfo = $this->twitterClient->getUserInfo($response->getUsername());
+
+        return $userInfo['profile_image_url'];
+    }
+
     private function getFriends($userId)
     {
         $response = $this->twitterClient->getFriends($userId);

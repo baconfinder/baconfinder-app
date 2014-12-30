@@ -29,10 +29,14 @@ class SocialImporter
         switch(strtolower($response->getResourceOwner()->getName())) {
             case 'facebook':
                 $this->fbImporter->importFriends($response);
+                $pic = $this->fbImporter->getPicture($response);
+                $user->getFacebookProfile()->setAvatar($pic);
                 $user->getFacebookProfile()->setLastImportTime(new \DateTime("NOW"));
                 $this->userManager->updateUser($user);
                 break;
             case 'twitter':
+                $pic = $this->twImporter->getUserPicture($response);
+                $user->getTwitterProfile()->setAvatar($pic);
                 $this->twImporter->importFriends($response);
                 $user->getTwitterProfile()->setLastImportTime(new \DateTime("NOW"));
                 $this->userManager->updateUser($user);

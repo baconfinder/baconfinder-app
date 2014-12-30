@@ -110,4 +110,33 @@ class TwitterClient
         }
 
     }
+
+    /**
+     * @param $userId
+     * @param null $cursor
+     * @return mixed
+     */
+    public function getUserInfo($userId)
+    {
+        $oauth = new Oauth1(
+            [
+                'consumer_key' => $this->apiKey,
+                'consumer_secret' => $this->apiSecret,
+                'token' => 	$this->appToken,
+                'token_secret' => $this->appTokenSecret
+            ]
+        );
+        $this->client->getEmitter()->attach($oauth);
+
+        $request = $this->client->createRequest('GET', 'users/show.json');
+        $query = $request->getQuery();
+        $query->set('user_id', $userId);
+
+        try {
+            return $this->client->send($request)->json();
+        } catch (ClientException $e) {
+
+        }
+
+    }
 }
