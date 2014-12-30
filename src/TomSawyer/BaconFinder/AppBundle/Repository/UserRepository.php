@@ -85,7 +85,7 @@ class UserRepository
             ON CREATE SET fb.first_name = {user}.facebookProfile.first_name,
             fb.last_name = {user}.facebookProfile.last_name,
             fb.email = {user}.facebookProfile.email,
-            fb.uuid = {user}.facebookProfile.uuid,
+            fb.uuid = {user}.facebookProfile.uuid
             SET fb.token = {user}.facebookProfile.token
             SET fb.last_import_time = {user}.facebookProfile.last_import_time
             SET fb.avatar = {user}.facebookProfile.avatar
