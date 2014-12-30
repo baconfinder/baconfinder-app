@@ -86,10 +86,11 @@ class UserRepository
             fb.last_name = {user}.facebookProfile.last_name,
             fb.email = {user}.facebookProfile.email,
             fb.uuid = {user}.facebookProfile.uuid,
-            fb.avatar = {user}.facebookProfile.avatar
             SET fb.token = {user}.facebookProfile.token
             SET fb.last_import_time = {user}.facebookProfile.last_import_time
-            MERGE (user)-[:FACEBOOK_PROFILE]->(fb) ';
+            SET fb.avatar = {user}.facebookProfile.avatar
+            MERGE (user)-[:FACEBOOK_PROFILE]->(fb)
+            MERGE (fb)-[:PROFILE_OF]->(user)';
         }
         if (null !== $user->getTwitterProfile()) {
             if (null === $user->getTwitterProfile()->getUuid()) {
@@ -101,7 +102,9 @@ class UserRepository
             tw.uuid = {user}.twitterProfile.uuid
             SET tw.token = {user}.twitterProfile.token
             SET tw.last_import_time = {user}.twitterProfile.last_import_time
-            MERGE (user)-[:TWITTER_PROFILE]->(tw) ';
+            SET tw.avatar = {user}.twitterProfile.avatar
+            MERGE (user)-[:TWITTER_PROFILE]->(tw)
+            MERGE (tw)-[:PROFILE_OF]->(user)';
         }
         $p = ['user' => $user->toArray()];
         $this->client->sendCypherQuery($q, $p);
