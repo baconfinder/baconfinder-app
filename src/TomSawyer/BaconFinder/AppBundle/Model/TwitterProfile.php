@@ -156,7 +156,8 @@ class TwitterProfile implements SocialProfileInterface
             'screen_name' => $this->screenName,
             'name' => $this->name,
             'token' => $this->token,
-            'last_import_time' => $this->lastImportTime
+            'last_import_time' => $this->lastImportTime,
+            'avatar' => $this->avatar
         );
     }
 

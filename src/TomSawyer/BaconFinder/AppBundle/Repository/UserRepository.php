@@ -266,6 +266,7 @@ class UserRepository
         SET twitter.screen_name = {user}.twitterProfile.screen_name
         SET twitter.name = {user}.twitterProfile.name
         SET twitter.token = {user}.twitterProfile.token
+        SET twitter.avatar = {user}.twitterProfile.avatar
         MERGE (user)-[:TWITTER_PROFILE]->(twitter)
         MERGE (twitter)-[:PROFILE_OF]->(user)
         RETURN user, twitter';
